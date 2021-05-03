@@ -16,6 +16,7 @@ import { MongoConfigService } from '../../../config/database/mongo/config.servic
           `${mongoConfigService.database}` +
           '?retryWrites=true&w=majority',
         useCreateIndex: true,
+        useFindAndModify: false,
       }),
       inject: [MongoConfigService],
     }),

@@ -16,6 +16,7 @@ import { LoginUserDto } from '../models/users/dto/login-user.dto';
 import { UserDto } from '../models/users/dto/user.dto';
 import {
   ApiBadRequestResponse,
+  ApiBearerAuth,
   ApiCreatedResponse,
   ApiHeader,
   ApiNotFoundResponse,
@@ -60,11 +61,7 @@ export class AuthController {
   @ApiBadRequestResponse({
     description: 'email에 해당하는 유저가 다른 소셜 계정일 때 발생합니다.',
   })
-  @ApiHeader({
-    required: true,
-    name: 'Authorization',
-    example: 'Bearer access_token',
-  })
+  @ApiBearerAuth()
   async login(
     @SocialUser() loginUser: LoginUserDto,
     @Param('provider') provider: string,
@@ -88,11 +85,7 @@ export class AuthController {
   @ApiBadRequestResponse({
     description: 'email에 해당하는 계정이 이미 존재할 때 발생합니다.',
   })
-  @ApiHeader({
-    required: true,
-    name: 'Authorization',
-    example: 'Bearer access_token',
-  })
+  @ApiBearerAuth()
   @Post('/register')
   @UseInterceptors(InputEmailProviderInterceptor)
   async register(
@@ -110,7 +103,7 @@ export class AuthController {
     } = this.authService.getCookieWithRefreshToken(registeredUser);
     res.cookie('Authorization', accessToken, accessOptions);
     res.cookie('Refresh', refreshToken, refreshOptions);
-    return registeredUser;
+    return new UserDto(registeredUser);
   }
 
   @Post('login')

@@ -18,6 +18,8 @@ import { AuthConfigService } from '../config/auth/config.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtRefreshStrategy } from './strategies/jwt.refresh.strategy';
 import { UsersService } from '../models/users/users.service';
+import { AnimalsRepository } from '../models/animals/animals.repository';
+import { Animal, AnimalSchema } from '../models/animals/schemas/animal.schema';
 
 @Module({
   imports: [
@@ -26,7 +28,10 @@ import { UsersService } from '../models/users/users.service';
       timeout: 5000,
       maxRedirects: 5,
     }),
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    MongooseModule.forFeature([
+      { name: User.name, schema: UserSchema },
+      { name: Animal.name, schema: AnimalSchema },
+    ]),
     PassportModule,
     JwtModule.registerAsync({
       imports: [AuthConfigModule],
@@ -46,12 +51,14 @@ import { UsersService } from '../models/users/users.service';
     JwtStrategy,
     JwtRefreshStrategy,
     UsersService,
+    AnimalsRepository,
   ],
 })
 export class AuthModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(SocialLoginMiddleware)
+      .exclude({ path: '/auth/refresh', method: RequestMethod.GET })
       .forRoutes(
         { path: 'auth/:provider', method: RequestMethod.GET },
         { path: 'auth/register', method: RequestMethod.POST },

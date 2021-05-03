@@ -2,10 +2,13 @@ import { Prop, raw, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 import { UserInterface } from '../interfaces/user.interface';
 import * as mongoose from 'mongoose';
+import { LanguageWithLevel } from '../../languages/schemas/language-with-level.schema';
+import { OwnAccessory } from './own-accessory.schema';
+import { OwnAnimal } from './own-animal.schema';
 
 export type UserDocument = User & Document;
 
-@Schema({ autoCreate: true, versionKey: false })
+@Schema({ autoCreate: true, versionKey: false, timestamps: true })
 export class User implements UserInterface {
   @Prop({ required: true, type: mongoose.Schema.Types.ObjectId, auto: true })
   _id: mongoose.Types.ObjectId;
@@ -19,8 +22,11 @@ export class User implements UserInterface {
   @Prop({ required: true, type: Number })
   age: number;
 
-  @Prop({ required: true, type: Date })
-  birthday: Date;
+  @Prop({ required: true, type: String })
+  birthday: string;
+
+  @Prop({ required: true, type: String })
+  country: string;
 
   @Prop({ required: true, type: String, unique: true })
   email: string;
@@ -28,26 +34,34 @@ export class User implements UserInterface {
   @Prop({ required: true, type: String })
   provider: string;
 
-  @Prop({ required: true, type: String })
-  concept: string;
+  @Prop([{ type: LanguageWithLevel, required: true }])
+  languages: LanguageWithLevel[];
 
   @Prop([
-    raw({
-      name: { type: String, required: true },
-      level: { type: String, required: true },
-    }),
+    {
+      required: true,
+      type: String,
+    },
   ])
-  languages: Record<string, any>[];
-
-  @Prop({ required: true, type: [String], default: [] })
   favorites: string[];
 
-  accessories;
+  @Prop({
+    type: OwnAccessory,
+    default: {
+      head: [],
+      top: [],
+      pants: [],
+      shoes: [],
+      gloves: [],
+    },
+  })
+  own_accessories: OwnAccessory;
 
-  animals;
+  @Prop([{ type: mongoose.Schema.Types.ObjectId, ref: 'OwnAnimal' }])
+  own_animals_id: OwnAnimal[];
 
-  @Prop({ type: Date, default: Date.now })
-  created: Date;
+  @Prop({ type: Date })
+  createdAt: Date;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

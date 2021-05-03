@@ -1,16 +1,19 @@
 import * as mongoose from 'mongoose';
+import { LanguageWithLevel } from '../../languages/schemas/language-with-level.schema';
+import { OwnAnimal } from '../schemas/own-animal.schema';
+import { OwnAccessory } from '../schemas/own-accessory.schema';
 
 export interface UserInterface {
   _id: mongoose.Types.ObjectId;
   name: string;
   age: number;
-  birthday: Date;
+  birthday: string;
   gender: string;
   email: string;
-  favorites: string[];
-  languages: Record<string, any>[];
-  concept: string;
+  country: string;
   provider: string;
-  animals;
-  accessories;
+  favorites: string[];
+  languages: LanguageWithLevel[];
+  own_animals_id: OwnAnimal[];
+  own_accessories: OwnAccessory;
 }

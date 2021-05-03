@@ -34,3 +34,9 @@ lerna-debug.log*
 !.vscode/extensions.json
 
 .idea
+
+.ssh
+
+*.sh
+
+serviceAccountKey.json

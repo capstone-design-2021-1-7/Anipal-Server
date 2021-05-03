@@ -1,13 +1,7 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { UsersRepository } from './users.repository';
 import { User } from './schemas/user.schema';
-import { CreateUserDto } from './dto/create-user.dto';
 import * as mongoose from 'mongoose';
-import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -37,24 +31,32 @@ export class UsersService {
     return user;
   }
 
-  async save(user: CreateUserDto): Promise<User> {
-    if (await this.findByEmail(user.email)) {
-      throw new BadRequestException({
-        detail: `${user.email}을 가진 유저가 이미 존재합니다.`,
-      });
-    }
-    return await this.usersRepository.save(user);
+  async findOwnAnimals(userId: mongoose.Types.ObjectId): Promise<User> {
+    return this.usersRepository.findOwnAnimals(userId);
   }
 
-  async update(
-    _id: mongoose.Types.ObjectId,
-    user: UpdateUserDto,
-  ): Promise<User> {
-    if (!(await this.find(_id))) {
-      throw new BadRequestException({
-        detail: `${_id}에 해당하는 유저가 존재하지 않습니다.`,
+  async findClosestUsers(user: User): Promise<User[]> {
+    const users = await this.usersRepository.findAll(user._id);
+    const closetUsers = users
+      .filter(
+        (other) =>
+          user.languages.filter((language) =>
+            other.languages
+              .map((otherLanguage) => otherLanguage.name)
+              .includes(language.name),
+          ).length > 0,
+      )
+      .map((other) => {
+        return {
+          count: user.favorites.filter((favorite) =>
+            other.favorites.includes(favorite),
+          ).length,
+          user: other,
+        };
       });
-    }
-    return await this.usersRepository.update(_id, user);
+    closetUsers.sort((a, b) => {
+      return a.count > b.count ? -1 : a.count < b.count ? 1 : 0;
+    });
+    return closetUsers.map((user) => user.user);
   }
 }

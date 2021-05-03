@@ -7,79 +7,139 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { UserInterface } from '../interfaces/user.interface';
 import { User } from '../schemas/user.schema';
 import { ApiProperty } from '@nestjs/swagger';
-import * as mongoose from 'mongoose';
+import { LanguageWithLevelDto } from '../../languages/dto/language-with-level.dto';
+import { Type } from 'class-transformer';
+import { OwnAccessoryDto } from './own-accessory.dto';
+import { OwnAnimalDto } from './own-animal.dto';
 
 export class UserDto {
   constructor(user: User) {
-    this._id = user._id;
+    this._id = user._id.toHexString();
     this.name = user.name;
     this.age = user.age;
     this.email = user.email;
     this.birthday = user.birthday;
-    this.concept = user.concept;
+    this.country = user.country;
     this.favorites = user.favorites;
     this.gender = user.gender;
-    this.languages = user.languages;
+    this.languages = user.languages.map(
+      (language) => new LanguageWithLevelDto(language),
+    );
+    this.accessories = new OwnAccessoryDto(user.own_accessories);
+    this.animals = user.own_animals_id.map(
+      (animal) => new OwnAnimalDto(animal),
+    );
   }
 
   @ApiProperty({
     required: true,
-    type: mongoose.Schema.Types.ObjectId,
+    type: String,
     example: '60681268ab645e32c4191cad',
+    description: '유저의 고유 id 값',
   })
   @IsNotEmpty()
   @IsMongoId()
-  _id: UserInterface['_id'];
+  _id: string;
 
-  @ApiProperty({ required: true, type: String })
+  @ApiProperty({
+    required: true,
+    type: String,
+    example: '캡스톤',
+    description: '유저의 이름',
+  })
   @IsNotEmpty()
   @IsString()
-  name: UserInterface['name'];
+  name: string;
 
-  @ApiProperty({ required: true, type: Number })
+  @ApiProperty({
+    required: true,
+    type: Number,
+    example: 20,
+    description: '유저의 나이',
+  })
   @IsNotEmpty()
   @IsNumber()
-  age: UserInterface['age'];
+  age: number;
 
-  @ApiProperty({ required: true, type: String })
+  @ApiProperty({
+    required: true,
+    type: String,
+    example: 'capstone@gamil.com',
+    description: '유저의 email',
+  })
   @IsNotEmpty()
   @IsEmail()
-  email: UserInterface['email'];
+  email: string;
 
-  @ApiProperty({ required: true, type: Date, example: '2020-01-10' })
+  @ApiProperty({
+    required: true,
+    type: String,
+    example: 'Korean',
+    description: '유저의 국적',
+  })
+  @IsNotEmpty()
+  @IsEmail()
+  country: string;
+
+  @ApiProperty({
+    required: true,
+    type: String,
+    example: '2020-01-10',
+    description: '유저의 생일',
+  })
   @IsNotEmpty()
   @IsDate()
-  birthday: UserInterface['birthday'];
-
-  @ApiProperty({ required: true, type: String })
-  @IsNotEmpty()
-  @IsString()
-  concept: UserInterface['concept'];
-
-  @ApiProperty({ required: true, type: [String] })
-  @IsNotEmpty()
-  @IsString({ each: true })
-  favorites: UserInterface['favorites'];
+  birthday: string;
 
   @ApiProperty({
     required: true,
     type: String,
     examples: ['male', 'female'],
-    enum: ['male', 'female'],
+    description: '유저의 성별',
   })
   @IsNotEmpty()
   @IsString()
-  gender: UserInterface['gender'];
+  gender: string;
 
-  @ApiProperty({ required: true, type: Object })
+  @ApiProperty({
+    required: false,
+    type: [String],
+    example: ['Movie', 'Dance'],
+    description: '유저의 관심사',
+  })
+  @IsNotEmpty()
+  @IsString({ each: true })
+  favorites: string[];
+
+  @ApiProperty({
+    required: true,
+    type: [LanguageWithLevelDto],
+    description: '유저가 사용할 수 있는 언어',
+  })
   @IsNotEmpty()
   @ValidateNested({ each: true })
-  languages: UserInterface['languages'];
+  @Type(() => LanguageWithLevelDto)
+  languages: LanguageWithLevelDto[];
 
-  accessories?: UserInterface['accessories'];
-  animals?: UserInterface['animals'];
-  // TODO: accessories와 animals schema가 생기면 추가해야 함.
+  @ApiProperty({
+    required: true,
+    type: OwnAccessoryDto,
+    description: '유저가 소유한 액세서리들',
+  })
+  @IsNotEmpty()
+  @ValidateNested()
+  @Type(() => OwnAccessoryDto)
+  accessories?: OwnAccessoryDto;
+
+  @ApiProperty({
+    required: true,
+    type: [OwnAnimalDto],
+    description: '유저가 소유한 동물 및 커스터마이징된 동물 정보',
+  })
+  @IsNotEmpty()
+  @ValidateNested({ each: true })
+  @Type(() => OwnAnimalDto)
+  animals?: OwnAnimalDto[];
 }
