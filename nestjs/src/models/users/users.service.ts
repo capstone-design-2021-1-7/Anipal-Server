@@ -1,11 +1,21 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { UsersRepository } from './users.repository';
 import { User } from './schemas/user.schema';
 import * as mongoose from 'mongoose';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { OwnAnimal } from './schemas/own-animal.schema';
+import { OwnAnimalsRepository } from './own-animals.repository';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly usersRepository: UsersRepository) {}
+  constructor(
+    private readonly usersRepository: UsersRepository,
+    private readonly ownAnimalsRepository: OwnAnimalsRepository,
+  ) {}
 
   async findAll(): Promise<User[]> {
     return await this.usersRepository.findAll();
@@ -35,6 +45,16 @@ export class UsersService {
     return this.usersRepository.findOwnAnimals(userId);
   }
 
+  async update(user: User, updatedUser: UpdateUserDto): Promise<User> {
+    if (updatedUser.favorite_animal) {
+      this.ownAnimalsRepository.changeFavoriteAnimal(
+        updatedUser.favorite_animal.animal_url,
+        user.favorite_animal.animal_url,
+      );
+    }
+    return this.usersRepository.update(user._id, updatedUser);
+  }
+
   async findClosestUsers(user: User): Promise<User[]> {
     const users = await this.usersRepository.findAll(user._id);
     const closetUsers = users
@@ -58,5 +78,12 @@ export class UsersService {
       return a.count > b.count ? -1 : a.count < b.count ? 1 : 0;
     });
     return closetUsers.map((user) => user.user);
+  }
+
+  async updateFavoriteAnimal(
+    userId: mongoose.Types.ObjectId,
+    updateOwnAnimal: OwnAnimal,
+  ) {
+    this.usersRepository.updateFavoriteAnimal(userId, updateOwnAnimal);
   }
 }

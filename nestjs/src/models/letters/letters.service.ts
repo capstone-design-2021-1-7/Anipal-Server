@@ -9,12 +9,14 @@ import { User } from '../users/schemas/user.schema';
 import { RandomSendLetterDto } from './dto/random-send-letter.dto';
 import { RandomLetter } from './schemas/random-letter.schema';
 import { ReplyRandomLetterDto } from './dto/reply-random-letter.dto';
+import { OwnAnimalsRepository } from '../users/own-animals.repository';
 
 @Injectable()
 export class LettersService {
   constructor(
     private readonly lettersRepository: LettersRepository,
     private readonly mailboxRepository: MailboxesRepository,
+    private readonly ownAnimalsRepository: OwnAnimalsRepository,
   ) {}
 
   async findLetter(letter_id: mongoose.Types.ObjectId): Promise<Letter> {
@@ -33,7 +35,12 @@ export class LettersService {
     return this.lettersRepository.findRandomLetter(random_id);
   }
   async send(user: User, sendLetter: SendLetterDto) {
-    const saveLetter: SaveLetterDto = new SaveLetterDto(sendLetter);
+    const saveLetter: SaveLetterDto = new SaveLetterDto(
+      sendLetter,
+      await this.ownAnimalsRepository.findOne(
+        mongoose.Types.ObjectId(sendLetter.own_animal_id),
+      ),
+    );
     saveLetter.sender = {
       user_id: user._id,
       name: user.name,
@@ -41,12 +48,16 @@ export class LettersService {
       favorites: user.favorites,
     };
     saveLetter.receiver_id = mongoose.Types.ObjectId(sendLetter.receiver);
-    saveLetter.coming_animal = sendLetter.coming_animal;
+
     try {
+      this.ownAnimalsRepository.useOwnAnimal(
+        mongoose.Types.ObjectId(sendLetter.own_animal_id),
+        saveLetter.arrive_time,
+      );
       await this.mailboxRepository.pushLetter(
         user._id,
         mongoose.Types.ObjectId(sendLetter.receiver),
-        this.lettersRepository.send(saveLetter),
+        await this.lettersRepository.send(saveLetter),
       );
     } catch {
       // TODO : 저장한 편지를 다시 지우는 작업을 해야함.
@@ -62,13 +73,23 @@ export class LettersService {
     randomSendLetter: RandomSendLetterDto,
     receivers: User[],
   ): Promise<RandomLetter> {
-    const saveLetter: SaveLetterDto = new SaveLetterDto(randomSendLetter);
+    const saveLetter: SaveLetterDto = new SaveLetterDto(
+      randomSendLetter,
+      await this.ownAnimalsRepository.findOne(
+        mongoose.Types.ObjectId(randomSendLetter.own_animal_id),
+      ),
+    );
     saveLetter.sender = {
       user_id: user._id,
       name: user.name,
       country: user.country,
       favorites: user.favorites,
     };
+    delete saveLetter.coming_animal;
+    this.ownAnimalsRepository.useOwnAnimal(
+      mongoose.Types.ObjectId(randomSendLetter.own_animal_id),
+      saveLetter.arrive_time,
+    );
     return this.lettersRepository.sendRandomLetter(saveLetter, receivers);
   }
 
@@ -81,7 +102,13 @@ export class LettersService {
       letter_id: repliedLetter,
       sender: receiver,
     } = await this.lettersRepository.replyRandomLetter(randomLetter_id);
-    const saveLetter: SaveLetterDto = new SaveLetterDto(sendLetter);
+
+    const saveLetter: SaveLetterDto = new SaveLetterDto(
+      sendLetter,
+      await this.ownAnimalsRepository.findOne(
+        mongoose.Types.ObjectId(sendLetter.own_animal_id),
+      ),
+    );
     saveLetter.sender = {
       user_id: user._id,
       name: user.name,
@@ -89,17 +116,19 @@ export class LettersService {
       favorites: user.favorites,
     };
     saveLetter.receiver_id = receiver.user_id;
-    saveLetter.coming_animal = sendLetter.coming_animal;
-    const newLetter = this.lettersRepository.send(saveLetter);
 
     try {
+      this.ownAnimalsRepository.useOwnAnimal(
+        mongoose.Types.ObjectId(sendLetter.own_animal_id),
+        saveLetter.arrive_time,
+      );
       this.mailboxRepository
-        .replyLetterPush(user._id, receiver.user_id, repliedLetter)
-        .then(() => {
+        .replyLetterPush(saveLetter.sender, receiver, repliedLetter)
+        .then(async () => {
           this.mailboxRepository.pushLetter(
             user._id,
             receiver.user_id,
-            newLetter,
+            await this.lettersRepository.send(saveLetter),
           );
         });
     } catch {

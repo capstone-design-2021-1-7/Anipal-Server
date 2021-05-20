@@ -11,8 +11,7 @@ import { User } from '../schemas/user.schema';
 import { ApiProperty } from '@nestjs/swagger';
 import { LanguageWithLevelDto } from '../../languages/dto/language-with-level.dto';
 import { Type } from 'class-transformer';
-import { OwnAccessoryDto } from './own-accessory.dto';
-import { OwnAnimalDto } from './own-animal.dto';
+import { DecoratedInfoDto } from '../../animals/dto/decorated-info.dto';
 
 export class UserDto {
   constructor(user: User) {
@@ -27,10 +26,7 @@ export class UserDto {
     this.languages = user.languages.map(
       (language) => new LanguageWithLevelDto(language),
     );
-    this.accessories = new OwnAccessoryDto(user.own_accessories);
-    this.animals = user.own_animals_id.map(
-      (animal) => new OwnAnimalDto(animal),
-    );
+    this.favorite_animal = new DecoratedInfoDto(user.favorite_animal);
   }
 
   @ApiProperty({
@@ -124,22 +120,10 @@ export class UserDto {
   languages: LanguageWithLevelDto[];
 
   @ApiProperty({
-    required: true,
-    type: OwnAccessoryDto,
-    description: '유저가 소유한 액세서리들',
+    type: DecoratedInfoDto,
   })
   @IsNotEmpty()
   @ValidateNested()
-  @Type(() => OwnAccessoryDto)
-  accessories?: OwnAccessoryDto;
-
-  @ApiProperty({
-    required: true,
-    type: [OwnAnimalDto],
-    description: '유저가 소유한 동물 및 커스터마이징된 동물 정보',
-  })
-  @IsNotEmpty()
-  @ValidateNested({ each: true })
-  @Type(() => OwnAnimalDto)
-  animals?: OwnAnimalDto[];
+  @Type(() => DecoratedInfoDto)
+  favorite_animal: DecoratedInfoDto;
 }

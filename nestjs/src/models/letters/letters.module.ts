@@ -13,6 +13,8 @@ import {
   RandomLetter,
   RandomLetterSchema,
 } from './schemas/random-letter.schema';
+import { OwnAnimalsRepository } from '../users/own-animals.repository';
+import { OwnAnimal, OwnAnimalSchema } from '../users/schemas/own-animal.schema';
 
 @Module({
   imports: [
@@ -21,6 +23,7 @@ import {
       { name: Mailbox.name, schema: MailboxSchema },
       { name: User.name, schema: UserSchema },
       { name: RandomLetter.name, schema: RandomLetterSchema },
+      { name: OwnAnimal.name, schema: OwnAnimalSchema },
     ]),
   ],
   controllers: [LettersController],
@@ -30,6 +33,7 @@ import {
     MailboxesRepository,
     UsersService,
     UsersRepository,
+    OwnAnimalsRepository,
   ],
 })
 export class LettersModule {}

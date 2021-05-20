@@ -13,6 +13,7 @@ import { AccessTokenDto } from './dto/access-token.dto';
 import { JwtPayloadDto } from './dto/jwt-payload.dto';
 import { RefreshTokenTdo } from './dto/refresh-token.tdo';
 import { AnimalsRepository } from '../models/animals/animals.repository';
+import { OwnAnimalsRepository } from '../models/users/own-animals.repository';
 
 @Injectable()
 export class AuthService {
@@ -22,6 +23,7 @@ export class AuthService {
     private readonly authConfigService: AuthConfigService,
 
     private readonly animalsRepository: AnimalsRepository,
+    private readonly ownAnimalsRepository: OwnAnimalsRepository,
   ) {}
 
   async login(loginUser: LoginUserDto, provider: string): Promise<User> {
@@ -45,8 +47,17 @@ export class AuthService {
         detail: `${registeredUser.email}와 같은 이메일을 가진 계정이 이미 존재합니다.`,
       });
     }
-    const animals = this.animalsRepository.findBasic();
-    return await this.usersRepository.save(registeredUser, await animals);
+    const ownAnimals = (await this.animalsRepository.findBasic()).map(
+      (animal) => {
+        const ownAnimal = this.ownAnimalsRepository.createOwnAnimalFromAnimal(
+          animal,
+        );
+        ownAnimal.is_favorite =
+          registeredUser.favorite_animal == animal._id.toHexString();
+        return ownAnimal;
+      },
+    );
+    return await this.usersRepository.save(registeredUser, ownAnimals);
   }
 
   getCookieWithAccessToken(user: User): AccessTokenDto {
@@ -59,7 +70,7 @@ export class AuthService {
     });
     return {
       accessToken: token,
-      domain: 'ec2-15-164-231-148.ap-northeast-2.compute.amazonaws.com',
+      domain: 'anipal.co.kr',
       path: '/',
       httpOnly: true,
       maxAge:
@@ -77,7 +88,7 @@ export class AuthService {
     });
     return {
       refreshToken: token,
-      domain: 'ec2-15-164-231-148.ap-northeast-2.compute.amazonaws.com',
+      domain: 'anipal.co.kr',
       path: '/',
       httpOnly: true,
       maxAge:

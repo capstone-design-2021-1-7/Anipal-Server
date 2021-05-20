@@ -11,7 +11,6 @@ export class LanguagesRepository {
   ) {}
 
   async findAll(): Promise<Language[]> {
-    const languages = this.languageModel.find().exec();
-    return languages;
+    return this.languageModel.find().exec();
   }
 }

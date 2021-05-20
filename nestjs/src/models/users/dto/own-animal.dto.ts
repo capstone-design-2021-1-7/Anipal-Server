@@ -37,8 +37,7 @@ export class OwnAnimalDto {
   _id: string;
 
   @ApiProperty({
-    type: String,
-    description: '동물 정보',
+    type: BriefAnimalInfoDto,
   })
   @ValidateNested()
   @Type(() => BriefAnimalInfoDto)

@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
 import { Mailbox, MailboxDocument } from './schemas/mailbox.schema';
 import { Letter } from '../letters/schemas/letter.schema';
+import { BriefUserInfo } from '../users/schemas/brief-user-info.schema';
 
 @Injectable()
 export class MailboxesRepository {
@@ -12,16 +13,14 @@ export class MailboxesRepository {
   ) {}
 
   async findMailboxes(user: mongoose.Types.ObjectId): Promise<Mailbox[]> {
-    const mailboxes = this.mailboxModel
+    return this.mailboxModel
       .find({ 'owner_users.user_id': user })
       .sort({ updated_at: -1 })
       .exec();
-    return mailboxes;
   }
 
   async findMailbox(mailbox_id: mongoose.Types.ObjectId): Promise<Mailbox> {
-    const mailbox = this.mailboxModel.findById(mailbox_id);
-    return mailbox;
+    return this.mailboxModel.findById(mailbox_id);
   }
 
   async showLettersInMailbox(
@@ -29,7 +28,10 @@ export class MailboxesRepository {
     mailbox_id: mongoose.Types.ObjectId,
   ): Promise<Mailbox> {
     const mailbox = this.mailboxModel
-      .findById(mailbox_id, 'letters_id owner_users recent_sender')
+      .findById(
+        mailbox_id,
+        'letters_id owner_users recent_sender arrive_time is_opened',
+      )
       .populate({
         path: 'letters_id',
         match: { arrive_time: { $lt: new Date() } },
@@ -37,10 +39,9 @@ export class MailboxesRepository {
       .sort({ arrive_time: -1 });
     mailbox.then((mailboxDoc) => {
       const { owner_users, recent_sender, arrive_time, is_opened } = mailboxDoc;
-      console.log(owner_users, recent_sender, mailboxDoc);
       if (
         owner_users.map((owner_user) => owner_user.user_id).includes(user) &&
-        recent_sender.equals(user) &&
+        !recent_sender.equals(user) &&
         arrive_time <= new Date() &&
         !is_opened
       ) {
@@ -75,8 +76,8 @@ export class MailboxesRepository {
   }
 
   async replyLetterPush(
-    sender: mongoose.Types.ObjectId,
-    receiver: mongoose.Types.ObjectId,
+    sender: BriefUserInfo,
+    receiver: BriefUserInfo,
     letter: Letter,
   ) {
     const mailbox = new this.mailboxModel({
@@ -84,7 +85,7 @@ export class MailboxesRepository {
       letters_count: 1,
       letters_id: [letter],
       thumbnail_animal: letter.post_animal,
-      recent_sender: sender,
+      recent_sender: sender.user_id,
       arrive_time: letter.arrive_time,
       is_opened: false,
     });
@@ -94,40 +95,23 @@ export class MailboxesRepository {
   async pushLetter(
     sender: mongoose.Types.ObjectId,
     receiver: mongoose.Types.ObjectId,
-    letter: Promise<Letter>,
+    letter: Letter,
   ): Promise<Mailbox> {
-    let updatedMailbox;
-    if (
-      await this.mailboxModel.findOne({
-        'owner_users.user_id': [sender, receiver],
-      })
-    ) {
-      const sentLetter = await letter;
-      updatedMailbox = this.mailboxModel.findOneAndUpdate(
-        { 'owner_users.user_id': [sender, receiver] },
-        {
-          $push: { letters_id: sentLetter },
-          $set: {
-            thumbnail_animal: sentLetter.post_animal,
-            arrive_time: sentLetter.arrive_time,
-            recent_sender: sender,
-            is_opened: false,
-          },
-          $inc: { letters_count: 1 },
+    await this.mailboxModel.updateOne(
+      { 'owner_users.user_id': [sender, receiver] },
+      {
+        $push: { letters_id: letter },
+        $set: {
+          thumbnail_animal: letter.post_animal,
+          arrive_time: letter.arrive_time,
+          recent_sender: sender,
+          is_opened: false,
         },
-      );
-    } else {
-      const sentLetter = await letter;
-      updatedMailbox = new this.mailboxModel({
-        owner_users: [sender, receiver],
-        letters_count: 1,
-        letters_id: [sentLetter],
-        thumbnail_animal: sentLetter.post_animal,
-        recent_sender: sender,
-        arrive_time: sentLetter.arrive_time,
-        is_opened: false,
-      }).save();
-    }
-    return updatedMailbox;
+        $inc: { letters_count: 1 },
+      },
+    );
+    return this.mailboxModel.findOne({
+      'owner_users.user_id': [sender, receiver],
+    });
   }
 }

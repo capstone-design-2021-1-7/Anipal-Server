@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Get,
   Param,
   Put,
 } from '@nestjs/common';
@@ -19,6 +20,7 @@ import { OwnAnimalDto } from './dto/own-animal.dto';
 import { UpdateOwnAnimalDto } from './dto/update-own-animal.dto';
 import { DUser } from './decorators/user.decorator';
 import { OwnAnimalsService } from './own-animals.service';
+import { User } from './schemas/user.schema';
 
 @ApiTags('own')
 @ApiBearerAuth('bearer')
@@ -28,6 +30,18 @@ export class OwnAnimalsController {
     private readonly usersService: UsersService,
     private readonly ownAnimalsService: OwnAnimalsService,
   ) {}
+
+  @Get('animals')
+  @ApiOkResponse({
+    description: '유저가 소유한 동물을 가져올 때 사용합니다..',
+    type: [OwnAnimalDto],
+  })
+  async findAllOwnAnimals(
+    @DUser('_id', TransformObjectidPipe) userId: mongoose.Types.ObjectId,
+  ): Promise<OwnAnimalDto[]> {
+    const { own_animals_id: ownAnimals } = await this.usersService.find(userId);
+    return ownAnimals.map((ownAnimal) => new OwnAnimalDto(ownAnimal));
+  }
 
   @Put('animals/:id')
   @ApiParam({ name: 'id', type: String })
@@ -42,11 +56,16 @@ export class OwnAnimalsController {
     @Param('id', TransformObjectidPipe)
     ownAnimalId: mongoose.Types.ObjectId,
     @Body() updateOwnAnimal: UpdateOwnAnimalDto,
-    @DUser('own_animals_id') ownAnimalsList: string[],
+    @DUser() user: User,
   ): Promise<OwnAnimalDto> {
+    const {
+      own_animals_id: ownAnimalsList,
+      favorite_animal: favoriteAnimal,
+      _id: userId,
+    } = user;
     if (
-      !ownAnimalsList.find(
-        (userOwnAnimal) => ownAnimalId.toHexString() == userOwnAnimal,
+      !ownAnimalsList.find((userOwnAnimal) =>
+        ownAnimalId.equals(userOwnAnimal._id),
       )
     ) {
       throw new BadRequestException({
@@ -57,6 +76,10 @@ export class OwnAnimalsController {
       ownAnimalId,
       updateOwnAnimal,
     );
+
+    if (updatedOwnAnimal.animal_url == favoriteAnimal.animal_url) {
+      this.usersService.updateFavoriteAnimal(userId, updatedOwnAnimal);
+    }
     return new OwnAnimalDto(updatedOwnAnimal);
   }
 }

@@ -1,10 +1,11 @@
-import { Prop, raw, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 import { UserInterface } from '../interfaces/user.interface';
 import * as mongoose from 'mongoose';
 import { LanguageWithLevel } from '../../languages/schemas/language-with-level.schema';
 import { OwnAccessory } from './own-accessory.schema';
 import { OwnAnimal } from './own-animal.schema';
+import { DecoratedInfo } from '../../animals/schemas/decorated-info.schema';
 
 export type UserDocument = User & Document;
 
@@ -59,6 +60,9 @@ export class User implements UserInterface {
 
   @Prop([{ type: mongoose.Schema.Types.ObjectId, ref: 'OwnAnimal' }])
   own_animals_id: OwnAnimal[];
+
+  @Prop({ type: DecoratedInfo, required: true })
+  favorite_animal: DecoratedInfo;
 
   @Prop({ type: Date })
   createdAt: Date;

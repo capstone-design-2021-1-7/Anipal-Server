@@ -12,6 +12,7 @@ import { TransformObjectidPipe } from '../../common/pipes/transform-objectid.pip
 import { BriefOwnAnimalDto } from './dto/brief-own-animal.dto';
 import { DUser } from '../users/decorators/user.decorator';
 import { User } from '../users/schemas/user.schema';
+import { Public } from '../../common/decorators/public.decorator';
 
 @ApiTags('animals')
 @ApiBearerAuth('bearer')
@@ -37,6 +38,7 @@ export class AnimalsController {
   }
 
   @Get('/basic')
+  @Public()
   @ApiOkResponse({
     type: [AnimalDto],
     description: '기본 동물을 얻을 때 사용합니다.',

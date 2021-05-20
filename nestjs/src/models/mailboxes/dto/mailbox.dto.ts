@@ -12,13 +12,18 @@ import { DecoratedInfoDto } from '../../animals/dto/decorated-info.dto';
 import { Mailbox } from '../schemas/mailbox.schema';
 import { ApiProperty } from '@nestjs/swagger';
 import { BriefUserInfoDto } from '../../users/dto/brief-user-info.dto';
+import * as mongoose from 'mongoose';
 
 export class MailboxDto {
-  constructor(mailbox?: Mailbox) {
+  constructor(mailbox?: Mailbox, user?: mongoose.Types.ObjectId) {
     if (mailbox) {
       this._id = mailbox._id.toHexString();
       this.letters_count = mailbox.letters_count;
-      if (mailbox.arrive_time <= new Date() && !mailbox.is_opened) {
+      if (
+        !user.equals(mailbox.recent_sender) &&
+        mailbox.arrive_time <= new Date() &&
+        !mailbox.is_opened
+      ) {
         this.thumbnail_animal = new DecoratedInfoDto(mailbox.thumbnail_animal);
       }
       this.arrive_date = mailbox.arrive_time;
@@ -45,14 +50,6 @@ export class MailboxDto {
   @IsNotEmpty()
   @IsNumber()
   letters_count: number;
-
-  @ApiProperty({
-    type: DecoratedInfoDto,
-  })
-  @IsOptional()
-  @ValidateNested()
-  @Type(() => DecoratedInfoDto)
-  thumbnail_animal?: DecoratedInfoDto;
 
   @ApiProperty({
     type: BriefUserInfoDto,
@@ -88,4 +85,13 @@ export class MailboxDto {
   @IsNotEmpty()
   @IsBoolean()
   is_connected: boolean;
+
+  @ApiProperty({
+    type: DecoratedInfoDto,
+    required: false,
+  })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => DecoratedInfoDto)
+  thumbnail_animal?: DecoratedInfoDto;
 }

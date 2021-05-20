@@ -4,13 +4,34 @@ import { DecoratedInfoDto } from '../../animals/dto/decorated-info.dto';
 import { ComingAnimalDto } from '../../animals/dto/coming-animal.dto';
 import { BriefUserInfo } from '../../users/schemas/brief-user-info.schema';
 import { RandomSendLetterDto } from './random-send-letter.dto';
+import { OwnAnimal } from '../../users/schemas/own-animal.schema';
+import { ReplyRandomLetterDto } from './reply-random-letter.dto';
 
 export class SaveLetterDto {
-  constructor(sendLetter: SendLetterDto | RandomSendLetterDto) {
+  constructor(
+    sendLetter: SendLetterDto | RandomSendLetterDto | ReplyRandomLetterDto,
+    ownAnimal: OwnAnimal,
+  ) {
     this.content = sendLetter.content;
-    this.post_animal = sendLetter.post_animal;
-
-    const [hour, minute, second] = sendLetter.delay_time
+    const {
+      animal_url,
+      head_url,
+      top_url,
+      pants_url,
+      shoes_url,
+      gloves_url,
+      coming_animal,
+      delay_time,
+    } = ownAnimal;
+    this.post_animal = {
+      animal_url,
+      head_url,
+      top_url,
+      pants_url,
+      shoes_url,
+      gloves_url,
+    };
+    const [hour, minute, second] = delay_time
       .split(' ')
       .map((time) => parseInt(time.slice(0, time.length - 1)));
     const send_time = new Date();
@@ -22,6 +43,7 @@ export class SaveLetterDto {
     );
     this.send_time = send_time;
     this.arrive_time = arrive_time;
+    this.coming_animal = new ComingAnimalDto(coming_animal);
   }
 
   content: string;

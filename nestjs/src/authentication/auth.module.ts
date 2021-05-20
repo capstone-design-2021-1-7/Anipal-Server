@@ -20,6 +20,11 @@ import { JwtRefreshStrategy } from './strategies/jwt.refresh.strategy';
 import { UsersService } from '../models/users/users.service';
 import { AnimalsRepository } from '../models/animals/animals.repository';
 import { Animal, AnimalSchema } from '../models/animals/schemas/animal.schema';
+import { OwnAnimalsRepository } from '../models/users/own-animals.repository';
+import {
+  OwnAnimal,
+  OwnAnimalSchema,
+} from '../models/users/schemas/own-animal.schema';
 
 @Module({
   imports: [
@@ -31,6 +36,7 @@ import { Animal, AnimalSchema } from '../models/animals/schemas/animal.schema';
     MongooseModule.forFeature([
       { name: User.name, schema: UserSchema },
       { name: Animal.name, schema: AnimalSchema },
+      { name: OwnAnimal.name, schema: OwnAnimalSchema },
     ]),
     PassportModule,
     JwtModule.registerAsync({
@@ -52,6 +58,7 @@ import { Animal, AnimalSchema } from '../models/animals/schemas/animal.schema';
     JwtRefreshStrategy,
     UsersService,
     AnimalsRepository,
+    OwnAnimalsRepository,
   ],
 })
 export class AuthModule implements NestModule {

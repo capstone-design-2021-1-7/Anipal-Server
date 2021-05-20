@@ -41,7 +41,7 @@ export class MailboxesController {
           (owner_user) => !owner_user.user_id.equals(user),
         ),
       ];
-      return new MailboxDto(mailbox);
+      return new MailboxDto(mailbox, user);
     });
   }
 

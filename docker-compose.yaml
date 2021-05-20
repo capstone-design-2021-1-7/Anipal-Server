@@ -17,6 +17,14 @@ services:
     build: nestjs
     environment:
       - NEST_SERVER_PORT=9091
+      - ANIPAL_GOOGLE_CLIENT_ID=609953406443-vi73houa9b1t1k7r7svlkirvj93eti61.apps.googleusercontent.com
+      - ANIPAL_GOOGLE_SECRET_KEY=8Jy1PJuNPlg4Sz6aOUmdBBvP
+      - ANIPAL_FACEBOOK_APP_KEY=297674025047994
+      - ANIPAL_FACEBOOK_SECRET_KEY=489247d1677a6a2d34a2b101ba308226
+      - MONGO_DATABASE=anipal
+      - MONGO_PASSWORD=W0SyzWA21y1re02z
+      - MONGO_USER=admin
+      - MONGO_HOST=anipal.nbrcb.mongodb.net
     volumes:
       - ./nestjs:/src
       - /src/node_modules

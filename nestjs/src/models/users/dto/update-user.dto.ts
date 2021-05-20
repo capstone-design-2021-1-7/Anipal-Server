@@ -3,6 +3,7 @@ import { IsOptional, IsString, ValidateNested } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { LanguageWithLevelDto } from '../../languages/dto/language-with-level.dto';
 import { Type } from 'class-transformer';
+import { DecoratedInfoDto } from '../../animals/dto/decorated-info.dto';
 
 export class UpdateUserDto {
   @ApiProperty({
@@ -34,4 +35,14 @@ export class UpdateUserDto {
   @ValidateNested({ each: true })
   @Type(() => LanguageWithLevelDto)
   languages?: LanguageWithLevelDto[];
+
+  @ApiProperty({
+    required: false,
+    type: DecoratedInfoDto,
+    description: '유저의 대표 동물',
+  })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => DecoratedInfoDto)
+  favorite_animal?: DecoratedInfoDto;
 }

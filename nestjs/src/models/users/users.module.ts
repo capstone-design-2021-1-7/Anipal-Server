@@ -7,6 +7,7 @@ import { OwnAnimal, OwnAnimalSchema } from './schemas/own-animal.schema';
 import { OwnAnimalsRepository } from './own-animals.repository';
 import { OwnAnimalsService } from './own-animals.service';
 import { OwnAnimalsController } from './own-animals.controller';
+import { UsersController } from './users.controller';
 
 @Module({
   imports: [
@@ -15,7 +16,7 @@ import { OwnAnimalsController } from './own-animals.controller';
       { name: OwnAnimal.name, schema: OwnAnimalSchema },
     ]),
   ],
-  controllers: [OwnAnimalsController],
+  controllers: [UsersController, OwnAnimalsController],
   providers: [
     UsersRepository,
     UsersService,
