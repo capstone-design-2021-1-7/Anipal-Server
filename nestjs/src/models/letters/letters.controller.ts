@@ -27,6 +27,7 @@ import { UsersService } from '../users/users.service';
 import { RandomSendLetterDto } from './dto/random-send-letter.dto';
 import { RandomLetterDto } from './dto/random-letter.dto';
 import { ReplyRandomLetterDto } from './dto/reply-random-letter.dto';
+import { MissionsService } from '../missions/missions.service';
 
 @ApiTags('letters')
 @ApiBearerAuth('bearer')
@@ -35,6 +36,7 @@ export class LettersController {
   constructor(
     private readonly lettersService: LettersService,
     private readonly usersService: UsersService,
+    private readonly missionsService: MissionsService,
   ) {}
 
   @Get('coming')
@@ -54,9 +56,7 @@ export class LettersController {
     type: [RandomLetterDto],
     description: '나에게 온 랜덤 편지들을 볼 때 사용합니다.',
   })
-  async findRandomLetters(
-    @DUser('_id', TransformObjectidPipe) user: mongoose.Types.ObjectId,
-  ): Promise<RandomLetterDto[]> {
+  async findRandomLetters(@DUser() user: User): Promise<RandomLetterDto[]> {
     return (await this.lettersService.findRandomLetters(user)).map(
       (letter) => new RandomLetterDto(letter),
     );
@@ -113,18 +113,20 @@ export class LettersController {
   @Post('random')
   @ApiCreatedResponse({
     description: '랜덤 편지를 보낼 때 사용합니다.',
+    type: RandomLetterDto,
   })
   async randomSend(
     @DUser() user: User,
     @Body() randomSendLetter: RandomSendLetterDto,
   ): Promise<RandomLetterDto> {
+    const pencil = this.missionsService.postFirstRandomLetterMission(user);
     const randomLetter = await this.lettersService.randomSend(
       user,
       randomSendLetter,
       await this.usersService.findClosestUsers(user),
     );
 
-    return new RandomLetterDto(randomLetter);
+    return new RandomLetterDto(randomLetter, await pencil);
   }
 
   @Post('random/:randomLetter_id')

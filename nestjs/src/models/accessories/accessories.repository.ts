@@ -17,4 +17,8 @@ export class AccessoriesRepository {
   async find(_id: mongoose.Types.ObjectId): Promise<Accessory> {
     return this.accessoryModel.findOne(_id).exec();
   }
+
+  async findByName(name: string): Promise<Accessory> {
+    return this.accessoryModel.findOne({ name }).exec();
+  }
 }

@@ -4,7 +4,6 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { MissionDto } from '../../missions/dto/mission.dto';
 import { Type } from 'class-transformer';
 import { Animal } from '../schemas/animal.schema';
 import { ApiProperty } from '@nestjs/swagger';
@@ -17,7 +16,7 @@ export class AnimalDto {
       this.price = animal.price;
       this.img_url = animal.img_url;
       this.delay_time = animal.delay_time;
-      this.mission = new MissionDto(animal.mission);
+      this.mission = animal.mission;
       this.coming_animal = new ComingAnimalDto(animal.coming_animal);
       this.is_basic = animal.is_basic;
       this.localized = animal.localized;
@@ -63,12 +62,13 @@ export class AnimalDto {
   delay_time: string;
 
   @ApiProperty({
-    type: MissionDto,
+    type: String,
+    example: 'changeFavoriteAnimal',
+    description: '동물을 얻기 위한 mission localized key 값',
   })
   @IsNotEmpty()
-  @ValidateNested()
-  @Type(() => MissionDto)
-  mission: MissionDto;
+  @IsString()
+  mission: string;
 
   @ApiProperty({
     type: ComingAnimalDto,

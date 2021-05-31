@@ -16,4 +16,5 @@ export interface UserInterface {
   languages: LanguageWithLevel[];
   own_animals_id: OwnAnimal[];
   own_accessories: OwnAccessory;
+  banned_users_id: mongoose.Types.ObjectId[];
 }

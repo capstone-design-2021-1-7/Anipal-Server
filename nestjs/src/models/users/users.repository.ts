@@ -5,6 +5,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import * as mongoose from 'mongoose';
 import { OwnAnimal } from './schemas/own-animal.schema';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { Accessory } from '../accessories/schemas/accessory.schema';
 
 @Injectable()
 export class UsersRepository {
@@ -24,6 +25,15 @@ export class UsersRepository {
     return this.userModel.findById(_id).populate('own_animals_id').exec();
   }
 
+  async findAllExceptBannedUser(
+    me: mongoose.Types.ObjectId,
+    banned_users_id: mongoose.Types.ObjectId[],
+  ) {
+    return this.userModel.find({
+      $and: [{ _id: { $ne: me } }, { _id: { $nin: banned_users_id } }],
+    });
+  }
+
   async findOwnAnimals(userId: mongoose.Types.ObjectId): Promise<User> {
     return this.userModel
       .findById(userId, 'own_animals_id')
@@ -35,6 +45,11 @@ export class UsersRepository {
     return this.userModel
       .findOne({ email })
       .populate('own_animals_id', 'animal.localized')
+      .populate('own_accessories.head.accessory_id')
+      .populate('own_accessories.gloves.accessory_id')
+      .populate('own_accessories.shoes.accessory_id')
+      .populate('own_accessories.pants.accessory_id')
+      .populate('own_accessories.top.accessory_id')
       .exec();
   }
 
@@ -72,5 +87,95 @@ export class UsersRepository {
         shoes_url: updateOwnAnimal.shoes_url,
       },
     });
+  }
+
+  async getAccessory(userId: mongoose.Types.ObjectId, accessory: Accessory) {
+    switch (accessory.category) {
+      case 'head':
+        await this.userModel.findOneAndUpdate(
+          { _id: userId },
+          {
+            $push: {
+              'own_accessories.head': {
+                accessory_id: accessory,
+                img_url: accessory.img_url,
+              },
+            },
+          },
+        );
+        break;
+      case 'gloves':
+        await this.userModel.findOneAndUpdate(
+          { _id: userId },
+          {
+            $push: {
+              'own_accessories.gloves': {
+                accessory_id: accessory,
+                img_url: accessory.img_url,
+              },
+            },
+          },
+        );
+        break;
+      case 'pants':
+        await this.userModel.findOneAndUpdate(
+          { _id: userId },
+          {
+            $push: {
+              'own_accessories.pants': {
+                accessory_id: accessory,
+                img_url: accessory.img_url,
+              },
+            },
+          },
+        );
+        break;
+      case 'top':
+        await this.userModel.findOneAndUpdate(
+          { _id: userId },
+          {
+            $push: {
+              'own_accessories.top': {
+                accessory_id: accessory,
+                img_url: accessory.img_url,
+              },
+            },
+          },
+        );
+        break;
+      case 'shoes':
+        await this.userModel.findOneAndUpdate(
+          { _id: userId },
+          {
+            $push: {
+              'own_accessories.shoes': {
+                accessory_id: accessory,
+                img_url: accessory.img_url,
+              },
+            },
+          },
+        );
+        break;
+    }
+  }
+
+  async banUser(
+    userId: mongoose.Types.ObjectId,
+    bannedUserId: mongoose.Types.ObjectId,
+  ) {
+    await this.userModel.findOneAndUpdate(
+      { _id: userId },
+      { $push: { banned_users_id: bannedUserId } },
+    );
+  }
+
+  async cancelBanUser(
+    userId: mongoose.Types.ObjectId,
+    bannedUserId: mongoose.Types.ObjectId,
+  ) {
+    await this.userModel.findOneAndUpdate(
+      { _id: userId },
+      { $pull: { banned_users_id: bannedUserId } },
+    );
   }
 }

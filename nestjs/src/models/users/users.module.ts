@@ -8,13 +8,18 @@ import { OwnAnimalsRepository } from './own-animals.repository';
 import { OwnAnimalsService } from './own-animals.service';
 import { OwnAnimalsController } from './own-animals.controller';
 import { UsersController } from './users.controller';
+import { MissionsModule } from '../missions/missions.module';
+import { Mailbox, MailboxSchema } from '../mailboxes/schemas/mailbox.schema';
+import { MailboxesRepository } from '../mailboxes/mailboxes.repository';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: User.name, schema: UserSchema },
       { name: OwnAnimal.name, schema: OwnAnimalSchema },
+      { name: Mailbox.name, schema: MailboxSchema },
     ]),
+    MissionsModule,
   ],
   controllers: [UsersController, OwnAnimalsController],
   providers: [
@@ -22,6 +27,7 @@ import { UsersController } from './users.controller';
     UsersService,
     OwnAnimalsService,
     OwnAnimalsRepository,
+    MailboxesRepository,
   ],
 })
 export class UsersModule {}

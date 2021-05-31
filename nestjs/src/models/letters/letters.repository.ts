@@ -28,11 +28,13 @@ export class LettersRepository {
 
   async findRandomLetters(
     user: mongoose.Types.ObjectId,
+    banned_users_id: mongoose.Types.ObjectId[],
   ): Promise<RandomLetter[]> {
     return this.randomLetterModel
       .find({
         receivers_id: { $elemMatch: { $eq: user } },
         arrive_time: { $lt: new Date() },
+        'sender.user_id': { $nin: banned_users_id },
       })
       .exec();
   }
@@ -63,6 +65,7 @@ export class LettersRepository {
       .select({
         coming_animal: 1,
         arrive_time: 1,
+        send_time: 1,
         'sender.name': 1,
       })
       .exec();
@@ -81,6 +84,7 @@ export class LettersRepository {
   }
 
   async replyRandomLetter(
+    user: User,
     randomLetter_id: mongoose.Types.ObjectId,
   ): Promise<RandomLetter> {
     const randomLetter = await this.randomLetterModel
@@ -90,6 +94,16 @@ export class LettersRepository {
       .populate('letter_id')
       .exec();
     if (randomLetter) {
+      await this.randomLetterModel
+        .updateMany(
+          {
+            'sender.user_id': randomLetter.sender.user_id,
+          },
+          {
+            $pull: { receivers_id: user._id },
+          },
+        )
+        .exec();
       return randomLetter;
     } else {
       throw new BadRequestException({

@@ -1,7 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 import { AccessoryInterface } from '../interfaces/accessory.interface';
-import { Mission } from '../../missions/schemas/mission.schema';
 import * as mongoose from 'mongoose';
 
 export type AccessoryDocument = Accessory & Document;
@@ -25,9 +24,9 @@ export class Accessory implements AccessoryInterface {
 
   @Prop({
     required: true,
-    type: Mission,
+    type: String,
   })
-  mission: Mission;
+  mission: string;
 }
 
 export const AccessorySchema = SchemaFactory.createForClass(Accessory);

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Put } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { User } from './schemas/user.schema';
 import { TransformObjectidPipe } from '../../common/pipes/transform-objectid.pipe';
@@ -6,6 +6,7 @@ import { UserDto } from './dto/user.dto';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
+  ApiOkResponse,
   ApiParam,
   ApiResponse,
   ApiTags,
@@ -13,12 +14,16 @@ import {
 import * as mongoose from 'mongoose';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { DUser } from './decorators/user.decorator';
+import { MissionsService } from '../missions/missions.service';
 
 @ApiTags('users')
 @ApiBearerAuth('bearer')
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly missionsService: MissionsService,
+  ) {}
 
   @ApiResponse({ status: 200, type: [UserDto] })
   @Get()
@@ -50,7 +55,33 @@ export class UsersController {
     @DUser() user: User,
     @Body() updateUser: UpdateUserDto,
   ): Promise<UserDto> {
+    let accessory;
+    if (updateUser.favorite_animal) {
+      accessory = this.missionsService.changeFavoriteAnimalMission(user);
+    }
     const updatedUser: User = await this.usersService.update(user, updateUser);
-    return new UserDto(updatedUser);
+    return new UserDto(updatedUser, await accessory);
+  }
+
+  @Put('ban/:bannedUserId')
+  @ApiParam({ name: 'bannedUserId', type: String })
+  @ApiOkResponse()
+  async banUser(
+    @DUser('_id', TransformObjectidPipe) userId: mongoose.Types.ObjectId,
+    @Param('bannedUserId', TransformObjectidPipe)
+    bannedUserId: mongoose.Types.ObjectId,
+  ) {
+    this.usersService.banUser(userId, bannedUserId);
+  }
+
+  @Delete('ban/:bannedUserId')
+  @ApiParam({ name: 'bannedUserId', type: String })
+  @ApiOkResponse()
+  async cancelBanUser(
+    @DUser('_id', TransformObjectidPipe) userId: mongoose.Types.ObjectId,
+    @Param('bannedUserId', TransformObjectidPipe)
+    bannedUserId: mongoose.Types.ObjectId,
+  ) {
+    this.usersService.cancelBanUser(userId, bannedUserId);
   }
 }

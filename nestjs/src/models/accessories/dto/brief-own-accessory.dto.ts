@@ -6,7 +6,7 @@ import { ObtainedAccessory } from '../schemas/obtained-accessory.schema';
 export class BriefOwnAccessoryDto {
   constructor(ownAccessory?: ObtainedAccessory, accessory?: Accessory) {
     if (ownAccessory) {
-      this.accessory_id = ownAccessory.accessory_id;
+      this.accessory_id = ownAccessory.accessory_id._id.toHexString();
       this.img_url = ownAccessory.img_url;
       this.is_own = true;
     } else if (accessory) {
@@ -23,7 +23,7 @@ export class BriefOwnAccessoryDto {
   })
   @IsNotEmpty()
   @IsString()
-  accessory_id;
+  accessory_id: string;
 
   @ApiProperty({
     type: String,

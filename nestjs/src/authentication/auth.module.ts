@@ -25,6 +25,11 @@ import {
   OwnAnimal,
   OwnAnimalSchema,
 } from '../models/users/schemas/own-animal.schema';
+import {
+  Mailbox,
+  MailboxSchema,
+} from '../models/mailboxes/schemas/mailbox.schema';
+import { MailboxesRepository } from '../models/mailboxes/mailboxes.repository';
 
 @Module({
   imports: [
@@ -37,6 +42,7 @@ import {
       { name: User.name, schema: UserSchema },
       { name: Animal.name, schema: AnimalSchema },
       { name: OwnAnimal.name, schema: OwnAnimalSchema },
+      { name: Mailbox.name, schema: MailboxSchema },
     ]),
     PassportModule,
     JwtModule.registerAsync({
@@ -59,6 +65,7 @@ import {
     UsersService,
     AnimalsRepository,
     OwnAnimalsRepository,
+    MailboxesRepository,
   ],
 })
 export class AuthModule implements NestModule {

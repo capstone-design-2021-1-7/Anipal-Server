@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 export class UpdateOwnAnimalDto {
   @ApiProperty({
@@ -7,7 +7,7 @@ export class UpdateOwnAnimalDto {
     example: 'https://s3.domain/filename.png',
     description: '모자의 사진 url ',
   })
-  @IsNotEmpty()
+  @IsOptional()
   @IsOptional()
   head_url?: string;
   @ApiProperty({

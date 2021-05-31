@@ -1,7 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 import { AnimalInterface } from '../interfaces/animal.interface';
-import { Mission } from '../../missions/schemas/mission.schema';
 import * as mongoose from 'mongoose';
 import { ComingAnimal } from './coming-animal.schema';
 
@@ -22,10 +21,10 @@ export class Animal implements AnimalInterface {
   price: number;
 
   @Prop({
-    required: true,
-    type: Mission,
+    required: false,
+    type: String,
   })
-  mission: Mission;
+  mission: string;
 
   @Prop({ required: true, type: Boolean })
   is_basic: boolean;

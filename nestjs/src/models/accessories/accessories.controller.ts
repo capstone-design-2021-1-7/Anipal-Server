@@ -31,7 +31,7 @@ export class AccessoriesController {
     ).filter(
       (accessory) =>
         !ownAccessories[category].find((ownAccessory) =>
-          ownAccessory.accessory_id.equals(accessory._id),
+          ownAccessory.accessory_id._id.equals(accessory._id),
         ),
     );
 

@@ -98,7 +98,12 @@ export class MailboxesRepository {
     letter: Letter,
   ): Promise<Mailbox> {
     await this.mailboxModel.updateOne(
-      { 'owner_users.user_id': [sender, receiver] },
+      {
+        $and: [
+          { 'owner_users.user_id': sender },
+          { 'owner_users.user_id': receiver },
+        ],
+      },
       {
         $push: { letters_id: letter },
         $set: {
@@ -111,7 +116,10 @@ export class MailboxesRepository {
       },
     );
     return this.mailboxModel.findOne({
-      'owner_users.user_id': [sender, receiver],
+      $and: [
+        { 'owner_users.user_id': sender },
+        { 'owner_users.user_id': receiver },
+      ],
     });
   }
 }

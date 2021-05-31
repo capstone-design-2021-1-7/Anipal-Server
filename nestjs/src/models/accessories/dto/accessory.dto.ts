@@ -1,11 +1,4 @@
-import {
-  IsNotEmpty,
-  IsNumber,
-  IsString,
-  ValidateNested,
-} from 'class-validator';
-import { MissionDto } from '../../missions/dto/mission.dto';
-import { Type } from 'class-transformer';
+import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Accessory } from '../schemas/accessory.schema';
 
@@ -58,12 +51,13 @@ export class AccessoryDto {
   img_url: string;
 
   @ApiProperty({
-    type: MissionDto,
+    type: String,
+    example: 'postFirstRandomLetter',
+    description: '액세서리를 얻기 위한 mission localized key 값',
   })
   @IsNotEmpty()
-  @ValidateNested()
-  @Type(() => MissionDto)
-  mission: MissionDto;
+  @IsString()
+  mission: string;
 
   @ApiProperty({
     type: String,

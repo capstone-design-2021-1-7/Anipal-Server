@@ -23,10 +23,11 @@ export class LettersService {
     return this.lettersRepository.findLetter(letter_id);
   }
 
-  async findRandomLetters(
-    user: mongoose.Types.ObjectId,
-  ): Promise<RandomLetter[]> {
-    return this.lettersRepository.findRandomLetters(user);
+  async findRandomLetters(user: User): Promise<RandomLetter[]> {
+    return this.lettersRepository.findRandomLetters(
+      user._id,
+      user.banned_users_id,
+    );
   }
 
   async findRandomLetter(
@@ -46,6 +47,7 @@ export class LettersService {
       name: user.name,
       country: user.country,
       favorites: user.favorites,
+      languages: user.languages,
     };
     saveLetter.receiver_id = mongoose.Types.ObjectId(sendLetter.receiver);
 
@@ -84,6 +86,7 @@ export class LettersService {
       name: user.name,
       country: user.country,
       favorites: user.favorites,
+      languages: user.languages,
     };
     delete saveLetter.coming_animal;
     this.ownAnimalsRepository.useOwnAnimal(
@@ -101,7 +104,7 @@ export class LettersService {
     const {
       letter_id: repliedLetter,
       sender: receiver,
-    } = await this.lettersRepository.replyRandomLetter(randomLetter_id);
+    } = await this.lettersRepository.replyRandomLetter(user, randomLetter_id);
 
     const saveLetter: SaveLetterDto = new SaveLetterDto(
       sendLetter,
@@ -114,6 +117,7 @@ export class LettersService {
       name: user.name,
       country: user.country,
       favorites: user.favorites,
+      languages: user.languages,
     };
     saveLetter.receiver_id = receiver.user_id;
 

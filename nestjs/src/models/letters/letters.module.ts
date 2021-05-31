@@ -15,6 +15,7 @@ import {
 } from './schemas/random-letter.schema';
 import { OwnAnimalsRepository } from '../users/own-animals.repository';
 import { OwnAnimal, OwnAnimalSchema } from '../users/schemas/own-animal.schema';
+import { MissionsModule } from '../missions/missions.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { OwnAnimal, OwnAnimalSchema } from '../users/schemas/own-animal.schema';
       { name: RandomLetter.name, schema: RandomLetterSchema },
       { name: OwnAnimal.name, schema: OwnAnimalSchema },
     ]),
+    MissionsModule,
   ],
   controllers: [LettersController],
   providers: [

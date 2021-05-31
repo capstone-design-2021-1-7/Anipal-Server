@@ -4,6 +4,7 @@ import {
   IsMongoId,
   IsNotEmpty,
   IsNumber,
+  IsOptional,
   IsString,
   ValidateNested,
 } from 'class-validator';
@@ -12,9 +13,11 @@ import { ApiProperty } from '@nestjs/swagger';
 import { LanguageWithLevelDto } from '../../languages/dto/language-with-level.dto';
 import { Type } from 'class-transformer';
 import { DecoratedInfoDto } from '../../animals/dto/decorated-info.dto';
+import { Accessory } from '../../accessories/schemas/accessory.schema';
+import { AccessoryDto } from '../../accessories/dto/accessory.dto';
 
 export class UserDto {
-  constructor(user: User) {
+  constructor(user: User, mission?: Accessory) {
     this._id = user._id.toHexString();
     this.name = user.name;
     this.age = user.age;
@@ -23,10 +26,16 @@ export class UserDto {
     this.country = user.country;
     this.favorites = user.favorites;
     this.gender = user.gender;
+    this.banned_users_id = user.banned_users_id
+      ? user.banned_users_id.map((user) => user.toHexString())
+      : [];
     this.languages = user.languages.map(
       (language) => new LanguageWithLevelDto(language),
     );
     this.favorite_animal = new DecoratedInfoDto(user.favorite_animal);
+    if (mission) {
+      this.mission = new AccessoryDto(mission);
+    }
   }
 
   @ApiProperty({
@@ -110,6 +119,16 @@ export class UserDto {
   favorites: string[];
 
   @ApiProperty({
+    required: false,
+    type: [String],
+    example: ['60922496b58ba001327134d6'],
+    description: '유저가 차단한 유저들의 id',
+  })
+  @IsNotEmpty()
+  @IsString({ each: true })
+  banned_users_id: string[];
+
+  @ApiProperty({
     required: true,
     type: [LanguageWithLevelDto],
     description: '유저가 사용할 수 있는 언어',
@@ -126,4 +145,12 @@ export class UserDto {
   @ValidateNested()
   @Type(() => DecoratedInfoDto)
   favorite_animal: DecoratedInfoDto;
+
+  @ApiProperty({
+    type: AccessoryDto,
+  })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => AccessoryDto)
+  mission?: AccessoryDto;
 }

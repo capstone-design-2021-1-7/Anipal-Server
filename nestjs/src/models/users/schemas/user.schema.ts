@@ -66,6 +66,9 @@ export class User implements UserInterface {
 
   @Prop({ type: Date })
   createdAt: Date;
+
+  @Prop([{ type: mongoose.Schema.Types.ObjectId }])
+  banned_users_id: mongoose.Types.ObjectId[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

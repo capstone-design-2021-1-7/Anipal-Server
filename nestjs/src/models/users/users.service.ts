@@ -1,20 +1,18 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { UsersRepository } from './users.repository';
 import { User } from './schemas/user.schema';
 import * as mongoose from 'mongoose';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { OwnAnimal } from './schemas/own-animal.schema';
 import { OwnAnimalsRepository } from './own-animals.repository';
+import { MailboxesRepository } from '../mailboxes/mailboxes.repository';
 
 @Injectable()
 export class UsersService {
   constructor(
     private readonly usersRepository: UsersRepository,
     private readonly ownAnimalsRepository: OwnAnimalsRepository,
+    private readonly mailboxesRepository: MailboxesRepository,
   ) {}
 
   async findAll(): Promise<User[]> {
@@ -56,7 +54,17 @@ export class UsersService {
   }
 
   async findClosestUsers(user: User): Promise<User[]> {
-    const users = await this.usersRepository.findAll(user._id);
+    const mailboxes = this.mailboxesRepository.findMailboxes(user._id);
+    const users = await this.usersRepository.findAllExceptBannedUser(
+      user._id,
+      user.banned_users_id,
+    );
+    const communicatedUsers = (await mailboxes).map(
+      (mailbox) =>
+        mailbox.owner_users.find(
+          (owner_user) => !owner_user.user_id.equals(user._id),
+        ).user_id,
+    );
     const closetUsers = users
       .filter(
         (other) =>
@@ -65,6 +73,12 @@ export class UsersService {
               .map((otherLanguage) => otherLanguage.name)
               .includes(language.name),
           ).length > 0,
+      )
+      .filter(
+        (other) =>
+          !communicatedUsers.find((communicatedUser) =>
+            communicatedUser.equals(other._id),
+          ),
       )
       .map((other) => {
         return {
@@ -85,5 +99,19 @@ export class UsersService {
     updateOwnAnimal: OwnAnimal,
   ) {
     this.usersRepository.updateFavoriteAnimal(userId, updateOwnAnimal);
+  }
+
+  async banUser(
+    userId: mongoose.Types.ObjectId,
+    bannedUserId: mongoose.Types.ObjectId,
+  ) {
+    this.usersRepository.banUser(userId, bannedUserId);
+  }
+
+  async cancelBanUser(
+    userId: mongoose.Types.ObjectId,
+    bannedUserId: mongoose.Types.ObjectId,
+  ) {
+    this.usersRepository.cancelBanUser(userId, bannedUserId);
   }
 }
